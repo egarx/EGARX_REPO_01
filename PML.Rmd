@@ -1,0 +1,186 @@
+---
+title: "PML TEST"
+author: "Emilio Garcia"
+date: "12/1/2020"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## The Goal
+
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with.
+
+
+## Questions to answer:
+
+1. How you built your model
+
+2. How you used cross validation
+
+3. What you think the expected out of sample error is
+
+4. why you made the choices you did. You will also use your prediction model to predict 20 different test cases.
+
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+
+```{r}
+# ------------------- loading libraries and data
+
+lista <- list("dplyr","caret", "readxl", "kernlab", "tidyverse")
+
+lapply(lista, library, character.only = TRUE)
+
+Training <- read.csv("C:/Users/emili/OneDrive/Escritorio/PML Test/pml-training.csv") 
+  
+Testing <- read.csv("C:/Users/emili/OneDrive/Escritorio/PML Test/pml-testing.csv") 
+
+```
+
+
+## Exploring data
+
+
+```{r}
+
+dim(Training)
+
+dim(Testing)
+
+View(head(Training,3))
+
+unique(Training$classe)
+
+table(Training$classe)
+
+```
+
+
+For this exercise I decided not to standarize the covariates.To standardize the independent variables when your model contains polynomial terms to model curvature or interaction terms. These terms provide crucial information about the relationships between the independent variables and the dependent variable, but they also generate high amounts of multicollinearity.
+
+
+## Remove NA's, these info not contribute to assess prediction. This code reduces the data frames size's
+
+
+```{r}
+
+# Testing our hypothesis
+
+#featurePlot(x=Training[,1:7],
+#            y = Training$classe,
+#            plot="pairs")
+
+training <- Training[, which(colSums(is.na(Training)) == 0)] 
+
+testing <- Testing[, which(colSums(is.na(Testing)) == 0)]
+
+
+```
+
+
+## Partitioning data frame for training into training and validation
+
+
+```{r}
+
+
+set.seed(73737)
+
+training <- training %>% as.data.frame()
+
+inTrain <- createDataPartition(training$classe, p=0.70, list=F)
+
+train <- training[inTrain, ]
+
+validation <- training[-inTrain, ]
+
+
+```
+
+
+## Cross Validating + Building model and cross validation
+
+# K-fold cross-validation 
+
+# Selecting best model option by the mean of its accuracy
+  
+(1) Modelling with regression tree (“rpart”)
+(2) Modelling with random forest (“rf”)
+(3) Modelling with boosted trees (“gbm”)
+
+
+```{r}
+
+
+#fit_Control <- trainControl(method="cv", number=3)
+
+#fit_tree <- train(classe~., method="rpart", data = #training, trControl=fit_Control)
+#fit_GBM <- train(classe~., method="gbm", data = training, #verbose=F, trControl=fit_Control)
+#fit_RF <- train(classe~., method="rf", data = training, #verbose=F, trControl=fit_Control)
+
+#mean(fit_Tree$resample$Accuracy)
+#mean(fit_GBM$resample$Accuracy)
+#mean(fit_RF$resample$Accuracy)
+
+
+```
+
+# Results
+
+#Tree
+0.3946421
+
+# RF
+0.1472621
+
+# GBM
+0.00342099
+
+# The GBM model has the highest mean accuracy.
+ 
+## Prediction
+
+
+```{r}
+
+
+#pred <- predict(fit_GBM, newdata=testing)
+
+#confusionMatrix(pred_GBM, testing$classe)$table
+
+#cat("Predictions: ", paste(predict(fit_GBM, Testing)))
+
+
+```
+
+
+# GBM
+# Prediction    A    B    C    D    E
+#          A 1673    0    0    0    0
+#          B    1 1136    3    0    0
+#          C    0    2 1020    2    0
+#          D    0    1    3  960    3
+#          E    0    0    0    2 1079
+
+
+
+## Predictions:  B A B A A E D B A A B C B A E E A B B B
+
+
+
+
+
+
+
